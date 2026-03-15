@@ -174,6 +174,40 @@ export async function* invokeNovaProStream(
   }
 }
 
+// Streaming invoke for Nova Lite
+export async function* invokeNovaLiteStream(
+  userContent: string,
+  systemPrompt: string
+): AsyncGenerator<string> {
+  const client = getClient();
+
+  const messages: NovaMessage[] = [
+    { role: "user", content: [{ type: "text", text: userContent }] },
+  ];
+  const payload = buildPayload(messages, systemPrompt);
+
+  const command = new InvokeModelWithResponseStreamCommand({
+    modelId: NOVA_LITE_MODEL,
+    contentType: "application/json",
+    accept: "application/json",
+    body: JSON.stringify(payload),
+  });
+
+  const response = await client.send(command);
+
+  if (!response.body) return;
+
+  for await (const event of response.body) {
+    if (event.chunk?.bytes) {
+      const chunk = JSON.parse(
+        Buffer.from(event.chunk.bytes).toString("utf-8")
+      );
+      const text = chunk.contentBlockDelta?.delta?.text;
+      if (text) yield text;
+    }
+  }
+}
+
 export const MODEL_IDS = {
   pro: NOVA_PRO_MODEL,
   lite: NOVA_LITE_MODEL,

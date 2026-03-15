@@ -20,6 +20,26 @@ export default function ArchitectureDiagram({ mermaidSource }: ArchitectureDiagr
     setLoading(true);
     setError(null);
 
+    // AI sometimes generates invalid syntax like unicode arrows or missing 'class' keyword
+    const sanitizedSource = mermaidSource
+      .replace(/[─—]+→/g, "-->") // Unicode long arrows
+      .replace(/──/g, "--")      // Unicode bars
+      .replace(/([^.])->(?=[^>])/g, "$1-->") // Standardize single arrows to double
+      .split("\n")
+      .map(line => {
+        const trimmed = line.trim();
+        const reserved = /^(graph|classDef|class|click|subgraph|end|style|direction|callback)/i;
+        const classAssignment = /^([\w, ]+)\s+([\w]+)$/; // Matches "A,B,C className"
+        if (!reserved.test(trimmed)) {
+          const match = trimmed.match(classAssignment);
+          if (match && match[1].includes(",")) {
+            return `    class ${match[1].trim()} ${match[2].trim()}`;
+          }
+        }
+        return line;
+      })
+      .join("\n");
+
     async function renderDiagram() {
       try {
         const mermaid = (await import("mermaid")).default;
@@ -50,7 +70,7 @@ export default function ArchitectureDiagram({ mermaidSource }: ArchitectureDiagr
         });
 
         const id = `mermaid-${Date.now()}`;
-        const { svg: rendered } = await mermaid.render(id, mermaidSource);
+        const { svg: rendered } = await mermaid.render(id, sanitizedSource);
 
         if (!cancelled) {
           setSvg(rendered);

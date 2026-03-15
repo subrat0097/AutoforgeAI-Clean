@@ -66,10 +66,10 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className={`w-full max-w-4xl mx-auto space-y-4 ${isEditMode ? "animate-in fade-in slide-in-from-bottom-2 duration-500" : ""}`}>
       {/* Main input card */}
-      <div className="gradient-border rounded-2xl w-full pointer-events-none">
-        <div className="glass-strong rounded-2xl p-1 w-full pointer-events-auto">
+      <div className={`${isEditMode ? "border-purple-500/30 bg-purple-500/5" : "gradient-border"} rounded-2xl w-full pointer-events-none`}>
+        <div className={`${isEditMode ? "bg-surface-800/80" : "glass-strong"} rounded-2xl p-1 w-full pointer-events-auto`}>
           {/* Image preview */}
           {imagePreview && (
             <div className="relative mx-3 mt-3 inline-block">
@@ -94,58 +94,62 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={isEditMode ? "What changes would you like to make? (e.g. 'Add a login page', 'Make it dark mode', 'Add a search bar'...)" : "Describe the app you want to build... (e.g. 'Create a full-stack e-commerce site with product listings, cart, user auth, and Stripe payments using Next.js')"}
-            rows={5}
+            rows={isEditMode ? 3 : 5}
             disabled={isGenerating}
-            className="w-full bg-transparent px-4 pt-4 pb-2 text-slate-100 placeholder-slate-500 resize-none focus:outline-none text-base leading-relaxed"
+            className={`w-full bg-transparent px-4 pt-4 pb-2 text-slate-100 placeholder-slate-500 resize-none focus:outline-none text-base leading-relaxed ${isEditMode ? "min-h-[100px]" : ""}`}
           />
 
           {/* Bottom bar */}
           <div className="flex items-center justify-between px-4 pb-3 pt-1 gap-3 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Stack picker */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowStackPicker(!showStackPicker)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
-                  style={{
-                    background: `${selectedStack.color}15`,
-                    border: `1px solid ${selectedStack.color}40`,
-                    color: selectedStack.color,
-                  }}
-                >
-                  <span>{selectedStack.icon}</span>
-                  <span>{selectedStack.label}</span>
-                  <ChevronDown size={12} className={`transition-transform ${showStackPicker ? "rotate-180" : ""}`} />
-                </button>
-                {showStackPicker && (
-                  <div className="absolute bottom-full left-0 mb-2 glass-strong rounded-xl p-2 w-64 z-50 shadow-2xl">
-                    {STACK_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => { setStack(opt.id); setShowStackPicker(false); }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-left"
-                      >
-                        <span className="text-lg">{opt.icon}</span>
-                        <div>
-                          <div className="text-sm font-medium text-slate-200">{opt.label}</div>
-                          <div className="text-xs text-slate-500">{opt.description}</div>
-                        </div>
-                        {stack === opt.id && <span className="ml-auto text-brand-400 text-xs">✓</span>}
-                      </button>
-                    ))}
+              {!isEditMode && (
+                <>
+                  {/* Stack picker */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowStackPicker(!showStackPicker)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
+                      style={{
+                        background: `${selectedStack.color}15`,
+                        border: `1px solid ${selectedStack.color}40`,
+                        color: selectedStack.color,
+                      }}
+                    >
+                      <span>{selectedStack.icon}</span>
+                      <span>{selectedStack.label}</span>
+                      <ChevronDown size={12} className={`transition-transform ${showStackPicker ? "rotate-180" : ""}`} />
+                    </button>
+                    {showStackPicker && (
+                      <div className="absolute bottom-full left-0 mb-2 glass-strong rounded-xl p-2 w-64 z-50 shadow-2xl">
+                        {STACK_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => { setStack(opt.id); setShowStackPicker(false); }}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-left"
+                          >
+                            <span className="text-lg">{opt.icon}</span>
+                            <div>
+                              <div className="text-sm font-medium text-slate-200">{opt.label}</div>
+                              <div className="text-xs text-slate-500">{opt.description}</div>
+                            </div>
+                            {stack === opt.id && <span className="ml-auto text-brand-400 text-xs">✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Image upload */}
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition-colors border border-white/10 hover:border-white/20"
-              >
-                <ImagePlus size={13} />
-                <span>Wireframe</span>
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+                  {/* Image upload */}
+                  <button
+                    onClick={() => fileRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition-colors border border-white/10 hover:border-white/20"
+                  >
+                    <ImagePlus size={13} />
+                    <span>Wireframe</span>
+                  </button>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+                </>
+              )}
 
               {/* Examples */}
               <button
@@ -153,16 +157,18 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 transition-colors border border-white/10 hover:border-white/20"
               >
                 <Sparkles size={13} />
-                <span>Examples</span>
+                <span>{isEditMode ? "Edit Ideas" : "Examples"}</span>
               </button>
 
               {/* Advanced toggle */}
-              <button
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-xs text-slate-500 hover:text-slate-400 transition-colors px-2 py-1"
-              >
-                {showAdvanced ? "− Advanced" : "+ Advanced"}
-              </button>
+              {!isEditMode && (
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="text-xs text-slate-500 hover:text-slate-400 transition-colors px-2 py-1"
+                >
+                  {showAdvanced ? "− Advanced" : "+ Advanced"}
+                </button>
+              )}
             </div>
 
             {/* Generate button */}
@@ -170,17 +176,17 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
               onClick={handleSubmit}
               disabled={!prompt.trim() || isGenerating}
               id="generate-btn"
-              className="btn-primary text-sm px-5 py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+              className={`${isEditMode ? "bg-purple-600 hover:bg-purple-500 shadow-purple-500/20" : "btn-primary"} text-sm px-5 py-2.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none rounded-xl font-semibold flex items-center gap-2 transition-all active:scale-95 shadow-lg`}
             >
               {isGenerating ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Forging...</span>
+                  <span>{isEditMode ? "Refining..." : "Forging..."}</span>
                 </>
               ) : (
                 <>
-                  <Wand2 size={16} />
-                  <span>{isEditMode ? "Forge Changes" : "Forge App"}</span>
+                  {isEditMode ? <Sparkles size={16} /> : <Wand2 size={16} />}
+                  <span>{isEditMode ? "Apply Changes" : "Forge App"}</span>
                   <span className="text-xs opacity-60 ml-1">⌘↵</span>
                 </>
               )}
@@ -188,7 +194,7 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
           </div>
 
           {/* Advanced options */}
-          {showAdvanced && (
+          {showAdvanced && !isEditMode && (
             <div className="mx-4 mb-3 pt-3 border-t border-white/5">
               <label className="block text-xs text-slate-500 mb-1.5">Additional instructions (optional)</label>
               <textarea
@@ -206,12 +212,14 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
       {/* Example prompts */}
       {showExamples && (
         <div className="glass rounded-xl p-4 space-y-2 animate-slide-up">
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">✨ Try these prompts</p>
-          {EXAMPLE_PROMPTS.map((ex, i) => (
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">
+            {isEditMode ? "✨ Popular edits" : "✨ Try these prompts"}
+          </p>
+          {(isEditMode ? ["Add a login page with validation", "Make the UI dark mode with purple accents", "Add a search bar to the header", "Make it responsive for mobile devices", "Add a contact form with email validation"] : EXAMPLE_PROMPTS).map((ex, i) => (
             <button
               key={i}
               onClick={() => { setPrompt(ex); setShowExamples(false); }}
-              className="w-full text-left text-sm text-slate-400 hover:text-slate-200 py-2 px-3 rounded-lg hover:bg-white/5 transition-all duration-150 border border-transparent hover:border-white/10"
+              className={`w-full text-left text-sm py-2 px-3 rounded-lg transition-all duration-150 border border-transparent shadow-sm ${isEditMode ? "text-purple-300 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/20" : "text-slate-400 hover:text-slate-200 hover:bg-white/5 hover:border-white/10"}`}
             >
               {ex}
             </button>
@@ -222,10 +230,10 @@ export default function PromptInput({ onGenerate, isGenerating, isEditMode }: Pr
       {/* Hint */}
       <p className="text-center text-xs text-slate-600">
         Powered by{" "}
-        <span className="text-brand-400 font-medium">AWS Amazon Nova Pro</span>
+        <span className={`${isEditMode ? "text-purple-400" : "text-brand-400"} font-medium`}>AWS Amazon Nova Pro</span>
         {" "}+{" "}
         <span className="text-nova-400 font-medium">Nova Lite</span>
-        {" "}· Press ⌘↵ to generate
+        {" "}· Press ⌘↵ to {isEditMode ? "save" : "generate"}
       </p>
     </div>
   );

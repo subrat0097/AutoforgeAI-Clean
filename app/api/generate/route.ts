@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { invokeNovaPro, invokeNovaLite } from "@/lib/bedrock";
+import { NextRequest } from "next/server";
+import { invokeNovaPro, invokeNovaLite, invokeNovaProStream } from "@/lib/bedrock";
 import {
   getAppGenerationSystemPrompt,
   buildGenerationPrompt,
@@ -9,145 +9,213 @@ import {
   buildReadmePrompt,
   DEPLOY_GUIDE_SYSTEM_PROMPT,
   SECURITY_SCAN_SYSTEM_PROMPT,
+  CLARIFIER_SYSTEM_PROMPT,
+  buildClarifierPrompt,
+  IaC_SYSTEM_PROMPT,
+  buildIaCPrompt,
 } from "@/lib/prompts";
 import {
   parseGeneratedFiles,
   parseMetadata,
   parseMermaidDiagram,
 } from "@/lib/parser";
-import type { StackType, ProjectOutput } from "@/lib/types";
+import type { StackType } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 120; // 2 minutes for full generation
+export const maxDuration = 180;
+
+// Helper to emit SSE events
+function emit(
+  controller: ReadableStreamDefaultController,
+  event: string,
+  data: unknown
+) {
+  const encoder = new TextEncoder();
+  controller.enqueue(
+    encoder.encode(`data: ${JSON.stringify({ event, ...(typeof data === "object" ? data : { message: data }) })}\n\n`)
+  );
+}
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const {
-      prompt,
-      stack = "nextjs",
-      imageBase64,
-      additionalInstructions,
-    }: {
-      prompt: string;
-      stack?: StackType;
-      imageBase64?: string;
-      additionalInstructions?: string;
-    } = body;
+  const body = await req.json();
+  const {
+    prompt,
+    stack = "nextjs",
+    imageBase64,
+    additionalInstructions,
+  }: {
+    prompt: string;
+    stack?: StackType;
+    imageBase64?: string;
+    additionalInstructions?: string;
+  } = body;
 
-    if (!prompt || prompt.trim().length < 5) {
-      return NextResponse.json(
-        { error: "Please provide a more detailed prompt." },
-        { status: 400 }
-      );
-    }
-
-    // ── Step 1: Generate full app code with Nova Pro ──────────────────────
-    const systemPrompt = getAppGenerationSystemPrompt(stack);
-    const userPrompt = buildGenerationPrompt(prompt, stack, additionalInstructions);
-
-    console.log(`[AutoForgeAI] Generating ${stack} app with Nova Pro...`);
-    const codeResponse = await invokeNovaPro(userPrompt, systemPrompt, imageBase64);
-
-    const files = parseGeneratedFiles(codeResponse.text);
-    const metadata = parseMetadata(codeResponse.text);
-
-    if (files.length === 0) {
-      return NextResponse.json(
-        {
-          error: "Generation failed — no files were produced. Please try a more specific prompt.",
-          rawResponse: codeResponse.text.slice(0, 500),
-        },
-        { status: 500 }
-      );
-    }
-
-    // ── Step 2-5: Generate Docs concurrently with Nova Lite ──────────────
-    console.log("[AutoForgeAI] Generating Architecture, README, Deploy Guide, and Security Report in parallel...");
-
-    const [archResponse, readmeResponse, deployResponse, securityResponse] = await Promise.allSettled([
-      invokeNovaLite(buildArchitecturePrompt(prompt), ARCHITECTURE_SYSTEM_PROMPT),
-      invokeNovaLite(buildReadmePrompt(prompt, stack, metadata?.features || []), README_SYSTEM_PROMPT),
-      invokeNovaLite(`Generate deployment guide for: ${prompt} (Stack: ${stack})`, DEPLOY_GUIDE_SYSTEM_PROMPT),
-      invokeNovaLite(`Perform threat modeling and security analysis for: ${prompt} (Stack: ${stack})`, SECURITY_SCAN_SYSTEM_PROMPT),
-    ]);
-
-    let architecture = `graph TD\n    A[Browser Client] --> B[Application]\n    B --> C[(Database)]`;
-    let readme = `# Generated Project\n\n${prompt}\n\n## Setup\n\`\`\`bash\nnpm install\nnpm run dev\n\`\`\``;
-    let deployGuide = `# Deployment Guide\n\nRun \`npm run build\` then deploy to Vercel or your preferred platform.`;
-    let securityReport = `# Security Report\n\nSecurity analysis could not be completed at this time. Always follow AWS security best practices.`;
-
-    if (archResponse.status === "fulfilled") {
-      try { architecture = parseMermaidDiagram(archResponse.value.text); } catch (e) { console.error("Error parsing Mermaid diagram", e); }
-    } else {
-      console.error("[AutoForgeAI] Architecture generation failed:", archResponse.reason);
-    }
-
-    if (readmeResponse.status === "fulfilled") {
-      readme = readmeResponse.value.text;
-    } else {
-      console.error("[AutoForgeAI] README generation failed:", readmeResponse.reason);
-    }
-
-    if (deployResponse.status === "fulfilled") {
-      deployGuide = deployResponse.value.text;
-    } else {
-      console.error("[AutoForgeAI] Deploy guide generation failed:", deployResponse.reason);
-    }
-
-    if (securityResponse.status === "fulfilled") {
-      securityReport = securityResponse.value.text;
-    } else {
-      console.error("[AutoForgeAI] Security report generation failed:", securityResponse.reason);
-    }
-
-    // ── Build response ────────────────────────────────────────────────────
-    const projectOutput: ProjectOutput = {
-      id: `forge_${Date.now()}`,
-      prompt,
-      stack,
-      files,
-      architecture,
-      readme,
-      deployGuide,
-      securityReport,
-      generatedAt: new Date().toISOString(),
-      modelUsed: `Nova Pro (code) + Nova Lite (arch/docs)`,
-      tokensUsed: codeResponse.tokensIn + codeResponse.tokensOut,
-    };
-
-    console.log(
-      `[AutoForgeAI] ✅ Generated ${files.length} files, ${projectOutput.tokensUsed} tokens used`
-    );
-
-    return NextResponse.json(projectOutput);
-  } catch (error: unknown) {
-    console.error("[AutoForgeAI] Generation error:", error);
-
-    const message =
-      error instanceof Error ? error.message : "Unknown generation error";
-
-    // Handle specific AWS errors
-    if (message.includes("AccessDeniedException")) {
-      return NextResponse.json(
-        {
-          error:
-            "AWS access denied. Please check your credentials and ensure Nova models are enabled in Bedrock.",
-        },
-        { status: 403 }
-      );
-    }
-
-    if (message.includes("ValidationException")) {
-      return NextResponse.json(
-        { error: "Invalid request to Nova model. Please try rephrasing your prompt." },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: `Generation failed: ${message}` },
-      { status: 500 }
-    );
+  if (!prompt || prompt.trim().length < 5) {
+    return new Response(JSON.stringify({ error: "Please provide a more detailed prompt." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
+
+  // Return a streaming SSE response
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        // ── AGENT 1: Clarifier (Nova Lite) ──────────────────────────────
+        emit(controller, "agent_start", {
+          agent: 1,
+          name: "Spec Clarifier",
+          model: "Nova Lite",
+          message: "Analyzing your idea and extracting requirements...",
+        });
+
+        const clarifierResponse = await invokeNovaLite(
+          buildClarifierPrompt(prompt, stack),
+          CLARIFIER_SYSTEM_PROMPT
+        );
+
+        emit(controller, "agent_done", {
+          agent: 1,
+          name: "Spec Clarifier",
+          output: clarifierResponse.text,
+          tokensUsed: clarifierResponse.tokensIn + clarifierResponse.tokensOut,
+        });
+
+        // ── AGENT 2: Architect (Nova Lite) ──────────────────────────────
+        emit(controller, "agent_start", {
+          agent: 2,
+          name: "System Architect",
+          model: "Nova Lite",
+          message: "Designing system architecture and tech stack...",
+        });
+
+        const archResponse = await invokeNovaLite(
+          buildArchitecturePrompt(prompt),
+          ARCHITECTURE_SYSTEM_PROMPT
+        );
+
+        let architecture = `graph TD\n    A[Browser Client] --> B[Application]\n    B --> C[(Database)]`;
+        try {
+          architecture = parseMermaidDiagram(archResponse.text);
+        } catch (e) {
+          console.error("Mermaid parse error", e);
+        }
+
+        emit(controller, "agent_done", {
+          agent: 2,
+          name: "System Architect",
+          output: architecture,
+          tokensUsed: archResponse.tokensIn + archResponse.tokensOut,
+        });
+
+        // ── AGENT 3: Code Generator (Nova Pro — streaming) ──────────────
+        emit(controller, "agent_start", {
+          agent: 3,
+          name: "Code Generator",
+          model: "Nova Pro",
+          message: "Generating production-ready application code...",
+        });
+
+        const systemPrompt = getAppGenerationSystemPrompt(stack);
+        const userPrompt = buildGenerationPrompt(prompt, stack, additionalInstructions);
+
+        let fullCode = "";
+        for await (const chunk of invokeNovaProStream(userPrompt, systemPrompt, imageBase64)) {
+          fullCode += chunk;
+          emit(controller, "code_chunk", { chunk });
+        }
+
+        const files = parseGeneratedFiles(fullCode);
+        const metadata = parseMetadata(fullCode);
+
+        if (files.length === 0) {
+          emit(controller, "error", { message: "Code generation produced no files. Please try a more specific prompt." });
+          controller.close();
+          return;
+        }
+
+        emit(controller, "agent_done", {
+          agent: 3,
+          name: "Code Generator",
+          filesGenerated: files.length,
+          output: `Generated ${files.length} files`,
+        });
+
+        // ── AGENT 4: IaC Generator (Nova Lite) ─────────────────────────
+        emit(controller, "agent_start", {
+          agent: 4,
+          name: "IaC Generator",
+          model: "Nova Lite",
+          message: "Creating AWS infrastructure-as-code (CDK/SAM)...",
+        });
+
+        const iacResponse = await invokeNovaLite(
+          buildIaCPrompt(prompt, stack, metadata?.features || []),
+          IaC_SYSTEM_PROMPT
+        );
+
+        emit(controller, "agent_done", {
+          agent: 4,
+          name: "IaC Generator",
+          output: iacResponse.text,
+          tokensUsed: iacResponse.tokensIn + iacResponse.tokensOut,
+        });
+
+        // ── AGENT 5: Docs + Security (Nova Lite — parallel) ────────────
+        emit(controller, "agent_start", {
+          agent: 5,
+          name: "Docs & Security",
+          model: "Nova Lite",
+          message: "Writing README, deployment guide, and security report...",
+        });
+
+        const [readmeRes, deployRes, securityRes] = await Promise.allSettled([
+          invokeNovaLite(buildReadmePrompt(prompt, stack, metadata?.features || []), README_SYSTEM_PROMPT),
+          invokeNovaLite(`Generate deployment guide for: ${prompt} (Stack: ${stack})`, DEPLOY_GUIDE_SYSTEM_PROMPT),
+          invokeNovaLite(`Generate security best practices for: ${prompt} (Stack: ${stack})`, SECURITY_SCAN_SYSTEM_PROMPT),
+        ]);
+
+        const readme = readmeRes.status === "fulfilled" ? readmeRes.value.text : `# ${prompt}\n\nGenerated project.`;
+        const deployGuide = deployRes.status === "fulfilled" ? deployRes.value.text : "Deploy using `npm run build`.";
+        const securityReport = securityRes.status === "fulfilled" ? securityRes.value.text : "Follow AWS security best practices.";
+
+        emit(controller, "agent_done", {
+          agent: 5,
+          name: "Docs & Security",
+          output: "Docs and security report complete",
+        });
+
+        // ── Final output ────────────────────────────────────────────────
+        emit(controller, "complete", {
+          id: `forge_${Date.now()}`,
+          prompt,
+          stack,
+          files,
+          architecture,
+          readme,
+          deployGuide,
+          securityReport,
+          iacTemplate: iacResponse.text,
+          clarifierOutput: clarifierResponse.text,
+          generatedAt: new Date().toISOString(),
+          modelUsed: "Nova Pro (code) + Nova Lite (arch / IaC / docs)",
+          agentsUsed: 5,
+        });
+
+        controller.close();
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        emit(controller, "error", { message });
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 }

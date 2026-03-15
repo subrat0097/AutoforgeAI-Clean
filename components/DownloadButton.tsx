@@ -44,7 +44,9 @@ export default function DownloadButton({
       const folder = zip.folder(projectName);
       if (!folder) throw new Error("Failed to create ZIP folder");
 
+      console.log("Packing ZIP for project:", projectName);
       allFiles.forEach((file) => {
+        console.log(`- Adding file: ${file.path} (${file.content.length} bytes)`);
         folder.file(file.path, file.content);
       });
 

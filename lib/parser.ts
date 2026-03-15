@@ -97,7 +97,7 @@ export function parseMermaidDiagram(rawOutput: string): string {
   // First check if the output itself is a valid mermaid graph
   const trimmed = rawOutput.trim();
   if (trimmed.startsWith("graph")) {
-    return trimmed;
+    return trimmed.replace(/(class\s+[^ \n,]+(?:,[^ \n,]+)*\s+)classDef\s+/g, "$1");
   }
 
   // Try ```mermaid or just ``` fenced block
@@ -105,17 +105,25 @@ export function parseMermaidDiagram(rawOutput: string): string {
   const fenced = fencedRegex.exec(rawOutput);
   if (fenced) {
     const content = fenced[1].trim();
-    if (content.startsWith("graph") || content.startsWith("pie") || content.startsWith("sequenceDiagram") || content.startsWith("classDiagram") || content.startsWith("stateDiagram") || content.startsWith("gantt") || content.startsWith("journey") || content.startsWith("gitGraph") || content.startsWith("erDiagram")) return content;
+    if (content.startsWith("graph") || content.startsWith("pie") || content.startsWith("sequenceDiagram") || content.startsWith("classDiagram") || content.startsWith("stateDiagram") || content.startsWith("gantt") || content.startsWith("journey") || content.startsWith("gitGraph") || content.startsWith("erDiagram")) {
+      return content.replace(/(class\s+[^ \n,]+(?:,[^ \n,]+)*\s+)classDef\s+/g, "$1");
+    }
   }
 
   // Fallback: try to find graph TD / graph LR pattern and strip any backticks
   const graphRegex = /(graph\s+(?:TD|LR|BT|RL)[\s\S]*)/i;
   const graph = graphRegex.exec(rawOutput);
+  let result = "";
+  
   if (graph) {
-    return graph[1].replace(/```/g, "").trim();
+    result = graph[1].replace(/```/g, "").trim();
+  } else {
+    result = rawOutput.replace(/```/g, "").trim();
   }
 
-  return rawOutput.replace(/```/g, "").trim();
+  // Cleanup: LLM often hallucinations 'class J,K classDef db' instead of 'class J,K db'
+  // We need to strip 'classDef ' if it follows 'class ...'
+  return result.replace(/(class\s+[^ \n,]+(?:,[^ \n,]+)*\s+)classDef\s+/g, "$1");
 }
 
 // Build a tree structure from flat file list
