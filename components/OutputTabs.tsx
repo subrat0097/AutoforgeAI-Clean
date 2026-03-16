@@ -401,7 +401,7 @@ function EditTab({
             </div>
             <h2 className="text-2xl font-bold text-white">Refine Your Project</h2>
             <p className="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
-              Describe changes like "Add a contact form", "Use a deep purple theme", or "Add a user profile page".
+              Describe changes like &quot;Add a contact form&quot;, &quot;Use a deep purple theme&quot;, or &quot;Add a user profile page&quot;.
               Nova Pro will update only the necessary files.
             </p>
           </div>
@@ -604,7 +604,7 @@ function AskAITab({
             <div className="space-y-2">
               <h3 className="text-xl font-bold text-white">Project Assistant</h3>
               <p className="text-slate-400 text-sm">
-                Ask me anything about your project's architecture, dependencies, deployment, or how specific features work.
+                Ask me anything about your project&apos;s architecture, dependencies, deployment, or how specific features work.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-2 w-full">
