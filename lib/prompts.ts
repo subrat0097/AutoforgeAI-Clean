@@ -327,6 +327,17 @@ CRITICAL REQUIREMENTS:
    - Dashboard metrics must show real numbers (e.g. "24,521 followers", "8.3% engagement")
    - Navigation links must show/hide sections using document.getElementById
    - ALL buttons must have addEventListener — ZERO non-functional buttons allowed
+   JAVASCRIPT INTERACTIONS ARE MANDATORY — test every button before outputting:
+   - Add to Cart: document.querySelector('.cart-count').textContent = ++cartCount
+   - Every button MUST have a working onclick attribute directly on the HTML element like:
+     <button onclick="addToCart('Nike Air Max 90', 149.99)">Add to Cart</button>
+   - Use onclick="" attributes directly on elements, NOT addEventListener
+   LOGO IS MANDATORY — every app must have a logo in the navbar using inline SVG:
+   <svg width="32" height="32" viewBox="0 0 32 32">
+     <circle cx="16" cy="16" r="16" fill="#7c3aed"/>
+     <text x="16" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold">A</text>
+   </svg>
+   The logo must be unique to the app — use the first letter of the app name with brand colors.
 9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
     - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
