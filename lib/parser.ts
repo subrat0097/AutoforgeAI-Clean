@@ -27,6 +27,39 @@ function detectLanguage(filename: string): string {
   return langMap[ext] || "text";
 }
 
+/**
+ * Strips markdown code fences from the start and end of a string.
+ * Handles patterns like:
+ *   ```json\n...\n```
+ *   ```tsx\n...\n```
+ *   ```\n...\n```
+ *   ` ``` `  (with no language tag)
+ */
+export function stripMarkdownFences(content: string): string {
+  // Trim surrounding whitespace first
+  let result = content.trim();
+
+  // Match an opening fence: ``` optionally followed by a language tag (letters, digits, dots, dashes)
+  // then a newline, then content, then a closing ``` at the end (with optional trailing whitespace)
+  const fenceRegex = /^```[\w.\-]*\r?\n([\s\S]*?)\r?\n```$/;
+  const match = fenceRegex.exec(result);
+
+  if (match) {
+    result = match[1].trim();
+  } else {
+    // Edge case: opening fence but no closing fence (malformed output)
+    // Strip just the opening line if it looks like a fence
+    const openOnlyRegex = /^```[\w.\-]*\r?\n/;
+    result = result.replace(openOnlyRegex, "").trim();
+
+    // And strip a dangling closing fence at the end
+    const closeOnlyRegex = /\r?\n```$/;
+    result = result.replace(closeOnlyRegex, "").trim();
+  }
+
+  return result;
+}
+
 // Parse Nova's XML-like file output format
 export function parseGeneratedFiles(rawOutput: string): GeneratedFile[] {
   const files: GeneratedFile[] = [];
@@ -37,7 +70,8 @@ export function parseGeneratedFiles(rawOutput: string): GeneratedFile[] {
 
   while ((match = fileRegex.exec(rawOutput)) !== null) {
     const filePath = match[1].trim();
-    const content = match[2].trim();
+    // ✅ Strip any markdown fences Nova may have wrapped around the content
+    const content = stripMarkdownFences(match[2].trim());
     const name = filePath.split("/").pop() || filePath;
 
     files.push({
@@ -55,7 +89,8 @@ export function parseGeneratedFiles(rawOutput: string): GeneratedFile[] {
     while ((match = mdBlockRegex.exec(rawOutput)) !== null) {
       const lang = match[1] || "text";
       const fileName = match[2];
-      const content = match[3].trim();
+      // ✅ Also strip fences in fallback path just in case of double-wrapping
+      const content = stripMarkdownFences(match[3].trim());
       if (fileName) {
         files.push({
           name: fileName.split("/").pop() || fileName,
@@ -105,7 +140,17 @@ export function parseMermaidDiagram(rawOutput: string): string {
   const fenced = fencedRegex.exec(rawOutput);
   if (fenced) {
     const content = fenced[1].trim();
-    if (content.startsWith("graph") || content.startsWith("pie") || content.startsWith("sequenceDiagram") || content.startsWith("classDiagram") || content.startsWith("stateDiagram") || content.startsWith("gantt") || content.startsWith("journey") || content.startsWith("gitGraph") || content.startsWith("erDiagram")) {
+    if (
+      content.startsWith("graph") ||
+      content.startsWith("pie") ||
+      content.startsWith("sequenceDiagram") ||
+      content.startsWith("classDiagram") ||
+      content.startsWith("stateDiagram") ||
+      content.startsWith("gantt") ||
+      content.startsWith("journey") ||
+      content.startsWith("gitGraph") ||
+      content.startsWith("erDiagram")
+    ) {
       return content.replace(/(class\s+[^ \n,]+(?:,[^ \n,]+)*\s+)classDef\s+/g, "$1");
     }
   }
@@ -114,7 +159,7 @@ export function parseMermaidDiagram(rawOutput: string): string {
   const graphRegex = /(graph\s+(?:TD|LR|BT|RL)[\s\S]*)/i;
   const graph = graphRegex.exec(rawOutput);
   let result = "";
-  
+
   if (graph) {
     result = graph[1].replace(/```/g, "").trim();
   } else {
@@ -122,7 +167,6 @@ export function parseMermaidDiagram(rawOutput: string): string {
   }
 
   // Cleanup: LLM often hallucinations 'class J,K classDef db' instead of 'class J,K db'
-  // We need to strip 'classDef ' if it follows 'class ...'
   return result.replace(/(class\s+[^ \n,]+(?:,[^ \n,]+)*\s+)classDef\s+/g, "$1");
 }
 
@@ -142,7 +186,6 @@ export function buildFileTree(files: GeneratedFile[]): FileTreeNode[] {
     const parts = file.path.split("/");
 
     if (parts.length === 1) {
-      // Top-level file
       root.push({
         name: file.name,
         path: file.path,
@@ -151,7 +194,6 @@ export function buildFileTree(files: GeneratedFile[]): FileTreeNode[] {
         content: file.content,
       });
     } else {
-      // Nested file — ensure folders exist
       let currentPath = "";
       let currentLevel = root;
 
@@ -173,7 +215,6 @@ export function buildFileTree(files: GeneratedFile[]): FileTreeNode[] {
         currentLevel = folder.children!;
       }
 
-      // Add the file to the deepest folder
       currentLevel.push({
         name: file.name,
         path: file.path,
