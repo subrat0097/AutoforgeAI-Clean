@@ -323,6 +323,13 @@ CRITICAL REQUIREMENTS:
    .product-price { font-size: 1.4rem; color: #7c3aed; font-weight: 800; }
    body { background: #0a0a1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
    DO NOT rely on any CSS framework — write every single style manually like the example above.
+   The index.html MUST be fully interactive — every button must work with JavaScript:
+   - Add to cart buttons must add items and show cart count
+   - Dashboard metrics must show real numbers (e.g. "24,521 followers", "8.3% engagement")
+   - Charts must be drawn with pure CSS bars or SVG — no chart libraries needed
+   - Navigation links must show/hide sections
+   - ALL onClick handlers must be implemented — ZERO non-functional buttons allowed
+9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
     - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
     - Real descriptions (actual feature descriptions) not "Description 1"
@@ -331,7 +338,9 @@ CRITICAL REQUIREMENTS:
     - For e-commerce: real product cards, real cart UI, real checkout flow
     - For dashboards: real charts, real metrics, real data
     - The app must look like a REAL production app, not a demo skeleton
-Generate the complete production-ready ${stack} application now.`;
+    - index.html specifically must have working JS interactions — not just static HTML
+
+Generate the complete production-ready ${stack} application now.
 }
 
 export function buildArchitecturePrompt(projectDescription: string): string {
