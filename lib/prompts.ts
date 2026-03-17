@@ -339,8 +339,7 @@ CRITICAL REQUIREMENTS:
     - For dashboards: real charts, real metrics, real data
     - The app must look like a REAL production app, not a demo skeleton
     - index.html specifically must have working JS interactions — not just static HTML
-
-Generate the complete production-ready ${stack} application now.
+Generate the complete production-ready ${stack} application now.`;
 }
 
 export function buildArchitecturePrompt(projectDescription: string): string {
