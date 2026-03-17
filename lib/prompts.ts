@@ -315,7 +315,14 @@ CRITICAL REQUIREMENTS:
    - Real product names, real prices, real descriptions
    - Hover effects, transitions, responsive layout
    - At minimum 200 lines of real HTML+CSS+JS
-   - NEVER just a title + one button — that is a FAILED output9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
+   - NEVER just a title + one button — that is a FAILED output
+   EVERY element MUST have explicit CSS styles — background colors, padding, margins, borders, fonts.
+   Here is an example of a styled product card you MUST follow:
+   .product-card { background: #1a1a2e; border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #2d2d4e; }
+   .product-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 12px 0 8px; }
+   .product-price { font-size: 1.4rem; color: #7c3aed; font-weight: 800; }
+   body { background: #0a0a1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+   DO NOT rely on any CSS framework — write every single style manually like the example above.
 10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
     - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
     - Real descriptions (actual feature descriptions) not "Description 1"
