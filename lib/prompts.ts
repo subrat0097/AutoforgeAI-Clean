@@ -306,9 +306,17 @@ CRITICAL REQUIREMENTS:
    "tailwindcss": "^3.4.0", "postcss": "^8.4.0", "autoprefixer": "^10.4.0",
    "eslint": "^8.0.0", "eslint-config-next": "^14.2.0".
    NEVER include "@testing-library/react" or any testing packages unless explicitly requested.
-   NEVER use "shadcn-ui", "shadcn/ui", or any made-up packages.8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
+   NEVER use "shadcn-ui", "shadcn/ui", or any made-up packages.
+8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
 9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
-
+10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
+    - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
+    - Real descriptions (actual feature descriptions) not "Description 1"
+    - Real prices, real categories, real data throughout
+    - Fully styled components with hover effects, transitions, gradients — NO unstyled plain HTML ever
+    - For e-commerce: real product cards, real cart UI, real checkout flow
+    - For dashboards: real charts, real metrics, real data
+    - The app must look like a REAL production app, not a demo skeleton
 Generate the complete production-ready ${stack} application now.`;
 }
 
