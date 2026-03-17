@@ -4,8 +4,8 @@ import type { StackType } from "./types";
 
 export function getAppGenerationSystemPrompt(stack: StackType): string {
   const stackGuide: Record<StackType, string> = {
-    nextjs: "Next.js 14 App Router with TypeScript, Tailwind CSS, and shadcn/ui components. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be a completely standalone, monolithic HTML file containing ALL styles (via Tailwind CDN) and ALL React code strictly embedded within `<script type=\"text/babel\">`. Do NOT use any `import` or `export` statements in this file, use global `window.React` and `window.ReactDOM` variables. Do NOT try to source module files. This is strictly required for the Live Preview iframe to work without a Webpack bundler.",
-    react: "React 18 with TypeScript, Vite, and Tailwind CSS. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be a completely standalone, monolithic HTML file containing ALL styles (via Tailwind CDN) and ALL React code strictly embedded within `<script type=\"text/babel\">`. Do NOT use any `import` or `export` statements in this HTML file, use global `window.React` and `window.ReactDOM` APIs. Do NOT try to link to other generated files.",
+    nextjs: "Next.js 14 App Router with TypeScript and Tailwind CSS. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be completely standalone using only vanilla HTML, a <style> block with plain CSS, and React via CDN babel script. Do NOT use Tailwind CDN, shadcn-ui, or any CSS framework in this file. Do NOT import or use window.shadcn_ui. Write all styles as plain CSS in a <style> tag. This is strictly required for the Live Preview iframe to work without a Webpack bundler.",
+    react: "React 18 with TypeScript, Vite, and Tailwind CSS. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be completely standalone using only vanilla HTML, a <style> block with plain CSS, and React via CDN babel script. Do NOT use Tailwind CDN, shadcn-ui, or any CSS framework in this file. Write all styles as plain CSS in a <style> tag. Do NOT try to link to other generated files.",
     html: "Vanilla HTML5, CSS3, and JavaScript. CRITICAL: Use ONLY inline styles and a <style> tag. Do NOT use Tailwind CSS classes at all. Write all CSS manually in a <style> block at the top. This guarantees the preview looks identical to the final product with zero CDN dependencies.",
     vue: "Vue 3 with TypeScript, Vite, and Tailwind CSS. CRITICAL: Also generate an 'index.html' using Vue CDN for instant previewing.",
     express: "Node.js with Express.js, TypeScript, and REST API structure",
@@ -300,8 +300,9 @@ CRITICAL REQUIREMENTS:
 4. Use realistic content — no "Feature 1" or "Lorem ipsum"
 5. Beautiful dark UI with Tailwind CSS
 6. All imports must reference files that actually exist in the project
-7. package.json must only include real npm packages (no "shadcn/ui", no made-up packages)
-8. index.html must be a standalone preview file using CDNs
+7. package.json must only include real npm packages — NEVER use "shadcn-ui", "shadcn/ui", or made-up packages. Use only real versioned packages from npmjs.com
+8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
+9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 
 Generate the complete production-ready ${stack} application now.`;
 }
