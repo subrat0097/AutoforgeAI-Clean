@@ -6,7 +6,7 @@ export function getAppGenerationSystemPrompt(stack: StackType): string {
   const stackGuide: Record<StackType, string> = {
     nextjs: "Next.js 14 App Router with TypeScript, Tailwind CSS, and shadcn/ui components. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be a completely standalone, monolithic HTML file containing ALL styles (via Tailwind CDN) and ALL React code strictly embedded within `<script type=\"text/babel\">`. Do NOT use any `import` or `export` statements in this file, use global `window.React` and `window.ReactDOM` variables. Do NOT try to source module files. This is strictly required for the Live Preview iframe to work without a Webpack bundler.",
     react: "React 18 with TypeScript, Vite, and Tailwind CSS. CRITICAL FOR HACKATHON: You MUST output an additional 'index.html' file at the root. This 'index.html' MUST be a completely standalone, monolithic HTML file containing ALL styles (via Tailwind CDN) and ALL React code strictly embedded within `<script type=\"text/babel\">`. Do NOT use any `import` or `export` statements in this HTML file, use global `window.React` and `window.ReactDOM` APIs. Do NOT try to link to other generated files.",
-    html: "Vanilla HTML5, CSS3, and modern JavaScript (ES2022+). CRITICAL: You MUST generate a SINGLE file named exactly 'index.html' at the root. This file must be completely self-contained with ALL CSS in a <style> tag and ALL JavaScript in a <script> tag. Use Tailwind CSS via CDN: <script src='https://cdn.tailwindcss.com'></script>. No separate files, no imports, no build step. The entire app in one index.html file.",
+    html: "Vanilla HTML5, CSS3, and JavaScript. CRITICAL: Use ONLY inline styles and a <style> tag. Do NOT use Tailwind CSS classes at all. Write all CSS manually in a <style> block at the top. This guarantees the preview looks identical to the final product with zero CDN dependencies.",
     vue: "Vue 3 with TypeScript, Vite, and Tailwind CSS. CRITICAL: Also generate an 'index.html' using Vue CDN for instant previewing.",
     express: "Node.js with Express.js, TypeScript, and REST API structure",
     fullstack: "Next.js 14 (frontend + API routes) with TypeScript, Tailwind CSS, and Prisma ORM",
@@ -231,8 +231,6 @@ Keep the report under 300 words and format it using Markdown.
 
 // ─── User-facing generation prompt builder ────────────────────────────────────
 
-// ─── Replace your existing buildGenerationPrompt function with this ──────────
-
 export function buildGenerationPrompt(
   userPrompt: string,
   stack: StackType,
@@ -247,17 +245,18 @@ ${additionalInstructions ? `Additional requirements:\n${additionalInstructions}\
 STRICT REQUIREMENTS — follow every single one:
 
 1. Output EXACTLY ONE file named index.html using: <FILE path="index.html">...</FILE>
-2. The file must be 100% self-contained — ALL CSS inside <style>, ALL JS inside <script>
-3. Use Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>
-4. Use a dark, modern design with gradients and glassmorphism effects
-5. Must have: navigation bar, hero section, features section, footer minimum
-6. ALL sections must be fully styled — no unstyled plain HTML
-7. ALL placeholder text must be realistic (not "Lorem ipsum" or "Feature 1")
-8. Interactive elements must work (buttons show alerts, forms validate, nav scrolls)
-9. Must be mobile responsive
-10. NO external image URLs — use CSS gradients and SVG icons instead
-11. Include smooth scroll, hover effects, and transitions
-12. The file must render perfectly when opened directly in a browser with no server
+2. The file must be 100% self-contained — ALL CSS inside a <style> tag at the top of <head>, ALL JS inside a <script> tag before </body>
+3. Do NOT use Tailwind CSS or any CSS framework. Write ALL styles manually in the <style> block.
+4. Do NOT use any CDN links for CSS frameworks. You may use Google Fonts CDN only.
+5. Use a dark, modern design with gradients and depth effects — all written in plain CSS
+6. Must have: navigation bar, hero section, features section, footer minimum
+7. ALL sections must be fully styled — no unstyled plain HTML
+8. ALL placeholder text must be realistic (not "Lorem ipsum" or "Feature 1")
+9. Interactive elements must work (buttons show alerts, forms validate, nav scrolls)
+10. Must be mobile responsive using CSS media queries
+11. NO external image URLs — use CSS gradients and inline SVG icons instead
+12. Include smooth scroll, hover effects, and CSS transitions
+13. The file must render perfectly when opened directly in a browser with no server
 
 Here is a COMPLETE example structure to follow:
 
@@ -268,13 +267,15 @@ Here is a COMPLETE example structure to follow:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>App Name</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* custom CSS here */
-    body { font-family: 'Inter', sans-serif; }
+    /* ALL styles written here in plain CSS — no Tailwind, no frameworks */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #f0f0f0; }
+    /* ... rest of styles ... */
   </style>
 </head>
-<body class="bg-gray-950 text-white">
+<body>
   <!-- Full app content here -->
   <script>
     // All JavaScript here
