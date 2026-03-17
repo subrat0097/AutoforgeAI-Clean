@@ -308,7 +308,14 @@ CRITICAL REQUIREMENTS:
    NEVER include "@testing-library/react" or any testing packages unless explicitly requested.
    NEVER use "shadcn-ui", "shadcn/ui", or any made-up packages.
 8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
-9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
+   THIS FILE IS THE MOST IMPORTANT FILE — it is what the user sees first.
+   It MUST be a COMPLETE, FULLY STYLED, BEAUTIFUL replica of the app with:
+   - Dark background, real colors, gradients, shadows
+   - ALL sections fully built out — navbar, hero, products, cart, footer
+   - Real product names, real prices, real descriptions
+   - Hover effects, transitions, responsive layout
+   - At minimum 200 lines of real HTML+CSS+JS
+   - NEVER just a title + one button — that is a FAILED output9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
     - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
     - Real descriptions (actual feature descriptions) not "Description 1"
