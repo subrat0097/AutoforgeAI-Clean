@@ -300,8 +300,13 @@ CRITICAL REQUIREMENTS:
 4. Use realistic content — no "Feature 1" or "Lorem ipsum"
 5. Beautiful dark UI with Tailwind CSS
 6. All imports must reference files that actually exist in the project
-7. package.json must only include real npm packages — NEVER use "shadcn-ui", "shadcn/ui", or made-up packages. Use only real versioned packages from npmjs.com
-8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
+7. package.json MUST use EXACT pinned versions — NEVER use "latest". Use these exact versions:
+   "react": "^18.2.0", "react-dom": "^18.2.0", "next": "^14.2.0", "typescript": "^5.0.0",
+   "@types/react": "^18.2.0", "@types/react-dom": "^18.2.0", "@types/node": "^20.0.0",
+   "tailwindcss": "^3.4.0", "postcss": "^8.4.0", "autoprefixer": "^10.4.0",
+   "eslint": "^8.0.0", "eslint-config-next": "^14.2.0".
+   NEVER include "@testing-library/react" or any testing packages unless explicitly requested.
+   NEVER use "shadcn-ui", "shadcn/ui", or any made-up packages.8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
 9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 
 Generate the complete production-ready ${stack} application now.`;
