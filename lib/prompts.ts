@@ -307,28 +307,26 @@ CRITICAL REQUIREMENTS:
    "eslint": "^8.0.0", "eslint-config-next": "^14.2.0".
    NEVER include "@testing-library/react" or any testing packages unless explicitly requested.
    NEVER use "shadcn-ui", "shadcn/ui", or any made-up packages.
-8. index.html MUST be a completely standalone preview file using plain CSS in a <style> tag — NO Tailwind CDN, NO shadcn-ui imports, NO window.shadcn_ui, NO CSS frameworks. Use React CDN + Babel CDN only. Write all styles manually in a <style> block.
+8. index.html MUST be a completely standalone preview file — NO React, NO Babel, NO JSX, NO Tailwind CDN, NO shadcn-ui, NO CSS frameworks, NO CDN libraries at all except Google Fonts.
+   Use PURE vanilla HTML, CSS, and JavaScript only — plain HTML elements, <style> block CSS, and vanilla JS event listeners.
    THIS FILE IS THE MOST IMPORTANT FILE — it is what the user sees first.
    It MUST be a COMPLETE, FULLY STYLED, BEAUTIFUL replica of the app with:
    - Dark background, real colors, gradients, shadows
-   - ALL sections fully built out — navbar, hero, products, cart, footer
-   - Real product names, real prices, real descriptions
-   - Hover effects, transitions, responsive layout
+   - ALL sections fully built out — navbar, hero, products/features, footer
+   - Real product names, real prices, real descriptions, real data
+   - Hover effects, transitions, responsive layout via CSS media queries
    - At minimum 200 lines of real HTML+CSS+JS
    - NEVER just a title + one button — that is a FAILED output
-   EVERY element MUST have explicit CSS styles — background colors, padding, margins, borders, fonts.
-   Here is an example of a styled product card you MUST follow:
-   .product-card { background: #1a1a2e; border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #2d2d4e; }
-   .product-name { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 12px 0 8px; }
-   .product-price { font-size: 1.4rem; color: #7c3aed; font-weight: 800; }
-   body { background: #0a0a1a; color: #e2e8f0; font-family: 'Inter', sans-serif; }
-   DO NOT rely on any CSS framework — write every single style manually like the example above.
-   The index.html MUST be fully interactive — every button must work with JavaScript:
-   - Add to cart buttons must add items and show cart count
+   EVERY element MUST have explicit CSS styles. Follow this example:
+   body { background: #0a0a1a; color: #e2e8f0; font-family: 'Inter', sans-serif; margin: 0; }
+   .card { background: #1a1a2e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border: 1px solid #2d2d4e; }
+   .price { font-size: 1.4rem; color: #7c3aed; font-weight: 800; }
+   nav { background: #0d0d1a; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e1e3a; }
+   The index.html MUST be fully interactive with vanilla JS:
+   - Add to cart buttons must update cart count in navbar
    - Dashboard metrics must show real numbers (e.g. "24,521 followers", "8.3% engagement")
-   - Charts must be drawn with pure CSS bars or SVG — no chart libraries needed
-   - Navigation links must show/hide sections
-   - ALL onClick handlers must be implemented — ZERO non-functional buttons allowed
+   - Navigation links must show/hide sections using document.getElementById
+   - ALL buttons must have addEventListener — ZERO non-functional buttons allowed
 9. BANNED IMPORTS in any file — never use: import from 'shadcn-ui', import from '@headlessui/react', import from 'shadcn/ui', window.shadcn_ui. Use only packages that exist in the generated package.json.
 10. CONTENT QUALITY IS MANDATORY — Every generated app must have:
     - Real product names (e.g. "Nike Air Max 90", "Sony WH-1000XM5") not "Product 1"
